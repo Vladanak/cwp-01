@@ -1,19 +1,18 @@
 const fs = require('fs');
+const path = require('path');
 
-var dir_path = process.argv[2];
-
-
-function FileSystem(path,fd)
-{
-    if(fs.existsSync(path))
-    {
-        fs.writeFile(`${path}` + "summary.js", "", function (err)
-        {
-            if (err)
-            {
-                throw err;
-            }
-
-        });
-    }
-}
+(function getFiles(baseDir) {
+    fs.readdir(baseDir, (err, files) => {
+        for (let i in files) {
+            let currentDir = baseDir + path.sep + files[i];
+            fs.stat(currentDir, (err, stats) => {
+                    if (stats.isDirectory()) {
+                        getFiles(currentDir);
+                    } else {
+                        console.log(path.relative(__dirname, currentDir));
+                    }
+                }
+            );
+        }
+    });
+})(__dirname, null);

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const myScriptForSummary = require('./myscript');
+const myScriptForSummary = require('./new');
 
 const DIR_PATH = process.argv[2];
 const EXTENSION = '.txt';
