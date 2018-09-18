@@ -1,6 +1,6 @@
 const name = process.argv[2];
 
-console.log(`Hi ${name}!`);
+console.log(`Hello ${name}!`);
 
 
 console.log(`2: ${process.argv[2]}`);
