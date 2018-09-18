@@ -1,4 +1,5 @@
 const fs = require('fs');
+
 var dir_path = process.argv[2];
 
 
@@ -12,8 +13,7 @@ function FileSystem(path,fd)
             {
                 throw err;
             }
-            write(fd);
+
         });
     }
-
 }
