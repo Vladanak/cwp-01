@@ -1,136 +1,105 @@
-const fs = require('fs');
-const path = require('path');
-const myScriptForSummary = require('./new');
+task05();
 
-const DIR_PATH = process.argv[2];
-const EXTENSION = '.txt';
-let copyright;
-
-(() =>
+function task05()
 {
-    fs.access(DIR_PATH, err =>
+    const pathToFile = process.argv[2] + "/summary.js";
+    const path = require('path');
+    const fs = require('fs');
+    if (process.argv[2])
+    {
+        fs.writeFile(path.basename(pathToFile), "", function(err) {
+            if (err)
+            {
+                throw "Ошибка:\n" + err;
+            }
+        });
+        //task 05.2
+        showDirectoryInfo(path.dirname(pathToFile));
+
+        //task 05.3
+        let pathToNewDir = path.dirname(pathToFile) + "\\" + path.basename(path.dirname(pathToFile));
+
+        fs.mkdir(pathToNewDir, (err) =>
+        {
+            if (err)
+            {
+                throw "Ошибка:\n" + err;
+            }
+        });
+
+        let files = fs.readdirSync(path.dirname(pathToFile));
+        let copyright = JSON.parse(fs.readFileSync('config.json')).copyright;
+        for (let i in files)
+        {
+            if (path.extname(files[i]) === ".txt")
+            {
+                let pathToSrc = path.dirname(pathToFile) + "\\" + files[i];
+                let pathToNewFile = pathToNewDir + "\\" + files[i];
+
+                fs.copyFileSync(pathToSrc, pathToNewFile);
+                let fcontent = fs.readFileSync(pathToNewFile, "utf-8");
+
+                let fileContent = copyright + "\r\n" + fcontent + "\r\n" + copyright;
+                console.log("file content:\n" + fileContent + "\n");
+                fs.writeFile(pathToNewFile, fileContent, (err) =>
+                {
+                    if (err)
+                    {
+                        throw "Ошибка:\n" + err;
+                    }
+                });
+                fs.watch(pathToNewFile, (eventType, filename) =>
+                {
+                    console.log(`Тип события: ${eventType}`);
+                    if (filename)
+                    {
+                        console.log(`Имя файла: ${filename}`);
+                    }
+                    else
+                    {
+                        console.log('Файл отсутствует');
+                    }
+                });
+
+            }
+        }
+
+        console.log("All is done.");
+    }
+    else
+    {
+        console.log("Error: not valid path to directory.");
+    }
+
+    function showDirectoryInfo(pathToDir)
+    {
+        console.log(pathToDir);
+        fs.readdir(pathToDir, function(err, listOfContents)
         {
             if (err)
             {
                 console.log(err);
-                console.log("Path error");
+                console.log(pathToDir);
             }
-            else
+            listOfContents.forEach(element =>
+            {
+                fs.stat((pathToDir + "\\" + element), function(err, stats)
                 {
-                let dirPath = createDirForTXT();
-                createSummaryScript();
-                setCopyright();
-                copyTXT(DIR_PATH, dirPath);
-                iWantToSeeChanges(DIR_PATH);
-            }
-        }
-    )
-})();
-
-const createSummaryScript = () =>
-{
-    fs.writeFile(`${DIR_PATH}\\summary.js`, myScriptForSummary, err =>
-    {
-        if (err)
-        {
-            console.log(err);
-            console.log('Error in appending file');
-        }
-    });
-};
-
-const setCopyright = () =>
-{
-    fs.readFile("config.json", (err, data) =>
-    {
-        if (err)
-        {
-            console.log(err);
-            console.log("error in config.json");
-            copyright = 'null';
-        }
-        else
-            {
-            copyright = JSON.parse(data);
-        }
-    }
-    )
-};
-
-const createDirForTXT = () =>
-{
-    let dir = `${DIR_PATH}\\${path.basename(DIR_PATH)}`;
-    fs.mkdir(dir, err =>
-    {
-        if (err)
-        {
-            console.log(err);
-            console.log("error in creatind directory for *.txt files");
-            throw  err;
-        }
-    }
-    );
-    return dir;
-};
-
-const copyTXT = (dir, dirOfTXTFiles) =>
-{
-    fs.readdir(dir, (err ,files) =>
-    {
-        if (err)
-            console.log(err);
-        else
-            {
-            for(let file in files)
-            {
-                let currentFile = `${dir}\\${files[file]}`;
-                if(fs.statSync(currentFile).isDirectory())
-                {
-                    copyTXT(currentFile, dirOfTXTFiles);
-                }
-                else
+                    if (err)
                     {
-                    if (path.extname(currentFile) === EXTENSION)
-                    {
-                        fs.readFile(currentFile, 'utf8', (err, data) =>
-                        {
-                            if (err)
-                            {
-                                console.log(err);
-                                console.log(`can't read file ${currentFile}`);
-                            }
-                            else
-                                {
-                                addCopyright(dirOfTXTFiles + path.sep + files[file], data);
-                            }
-                        })
+                        console.log(err);
+                        console.log(pathToDir);
                     }
-                }
-            }
-        }
-    })
-};
-
-const addCopyright = (path, data) =>
-{
-    let text = copyright["copyright"] + data + copyright["copyright"];
-    fs.appendFile(path, text, 'utf8', err =>
-    {
-        if (err)
-        {
-            console.log(err);
-            console.log("error in adding copyright");
-        }
-    })
-};
-
-const iWantToSeeChanges = dir =>
-{
-    fs.watch(dir, (eventType, fileName) =>
-    {
-        if (fileName)
-        {
-            console.log(fileName.toString());
-        }
-    });
-};
+                    if (stats.isDirectory())
+                    {
+                        showDirectoryInfo(pathToDir + "\\" + element);
+                    }
+                    if (stats.isFile())
+                    {
+                        fs.appendFileSync(pathToFile, "console.log('" + path.relative(path.dirname(pathToFile), pathToDir + element).toString().replace("\\", "\\\\")  + "');\n");
+                    }
+                });
+            });
+        })
+    }
+}
